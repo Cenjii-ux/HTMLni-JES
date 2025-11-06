@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Jes’ Phone Shop 📱</title>
+<title>Jes’ Phone Shop 📱 — 4 OOP Concepts</title>
 <style>
   body {
     font-family: 'Poppins', sans-serif;
@@ -125,12 +125,12 @@
 </style>
 </head>
 <body>
-<h1>Jes’ Phone Shop 📱</h1>
+<h1>Jes’ Phone Shop 📱 — 4 OOP Concepts</h1>
 
-<!-- 🛍️ Product Display Section -->
+<!--  Product Display Section -->
 <div id="productContainer" class="product-container"></div>
 
-<!-- 🧾 Cart Section -->
+<!--Cart Section -->
 <h2>Your Cart</h2>
 <table class="cart-table">
   <thead>
@@ -147,38 +147,76 @@
 </table>
 
 <h3 id="total">Total: $0.00</h3>
-
 <button id="checkout-btn">Checkout</button>
 
 <script>
+/*  1. ENCAPSULATION 
+   Encapsulation means bundling data and methods inside a single unit (class).
+   The 'Product' class below keeps product info (name, price, image, link)
+   safely organized inside one object. */
 class Product {
   constructor(name, price, image, link) {
-    this.name = name;
-    this.price = price;
-    this.image = image;
-    this.link = link;
+    this.name = name;   // product name
+    this.price = price; // product price
+    this.image = image; // image URL
+    this.link = link;   // product link
+  }
+
+  // Method that returns details of the product (used in Polymorphism)
+  getDetails() {
+    return `${this.name} - $${this.price.toFixed(2)}`;
   }
 }
 
+/* ----------------------------- 2. INHERITANCE -----------------------------
+   The 'DiscountedProduct' class inherits from 'Product'.
+   It gets all the properties and methods of Product but adds new ones
+   (like 'discountRate' and a new way to calculate discounted prices).
+--------------------------------------------------------------------------- */
+class DiscountedProduct extends Product {
+  constructor(name, price, image, link, discountRate) {
+    super(name, price, image, link); // reuses constructor of Product
+    this.discountRate = discountRate; // additional feature: discount %
+  }
+
+  // --------------------------- 3. POLYMORPHISM ---------------------------
+  // Polymorphism allows us to use the same method name (getDetails)
+  // but behave differently in subclasses.
+  getDetails() {
+    const discounted = this.price * (1 - this.discountRate);
+    return `${this.name} (Discounted ${this.discountRate * 100}%): $${discounted.toFixed(2)}`;
+  }
+}
+
+/* ------------------------------- 4. ABSTRACTION ---------------------------
+   Abstraction hides complex logic behind simple functions.
+   Users just call renderProducts() or renderCart() without worrying
+   about how the logic works internally.
+--------------------------------------------------------------------------- */
+
+// Product list (mix of normal and discounted products)
 const products = [
   new Product("iPhone 15 Pro", 1199, "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-15-pro-model-unselect-gallery-1-202309?wid=5120&hei=2880&fmt=jpeg&qlt=90&.v=1693001523024", "https://www.apple.com/iphone/"),
-  new Product("Google Pixel 9 Pro", 999, "https://i.guim.co.uk/img/media/2f6082f5edb313aa955a3df84e140f9854b4274e/84_124_5168_3100/master/5168.jpg?width=1200&height=900&quality=85&auto=format&fit=crop&s=32695a12c90e0cf21712e2ffafa24c39", "https://store.google.com/product/pixel_9_pro?hl=en-US"),
-  new Product("OnePlus 12", 899, "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcToCmSXUHVYyzbR-C5AZMNMfyEKUA2QWzu2bA&s", "https://www.oneplus.com/us/oneplus-12"),
-  new Product("ASUS ROG Phone 8", 1099, "https://fdn2.gsmarena.com/vv/bigpic/asus-rog-phone-8-pro.jpg", "https://rog.asus.com/phones/rog-phone-8/")
+  new DiscountedProduct("Google Pixel 9 Pro", 999, "https://i.guim.co.uk/img/media/2f6082f5edb313aa955a3df84e140f9854b4274e/84_124_5168_3100/master/5168.jpg?width=1200&height=900&quality=85&auto=format&fit=crop&s=32695a12c90e0cf21712e2ffafa24c39", "https://store.google.com/product/pixel_9_pro?hl=en-US", 0.10),
+  new Product("OnePlus 12", 699, "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcToCmSXUHVYyzbR-C5AZMNMfyEKUA2QWzu2bA&s", "https://www.oneplus.com/us/oneplus-12"),
+  new DiscountedProduct("ASUS ROG Phone 8", 1099, "https://fdn2.gsmarena.com/vv/bigpic/asus-rog-phone-8-pro.jpg", "https://rog.asus.com/phones/rog-phone-8/", 0.15)
 ];
 
 const container = document.getElementById("productContainer");
 const cart = [];
 
 function renderProducts() {
-  container.innerHTML = ""; // clear first
+  container.innerHTML = "";
   products.forEach((p) => {
     const card = document.createElement("div");
     card.classList.add("product-card");
+
+    // Notice we use polymorphism: p.getDetails() behaves differently
+    // for DiscountedProduct vs normal Product.
     card.innerHTML = `
       <img src="${p.image}" alt="${p.name}">
       <h3>${p.name}</h3>
-      <p>$${p.price.toFixed(2)}</p>
+      <p>${p.getDetails()}</p>
       <button class="quick-view">Quick View</button>
       <button class="add-to-cart">Add to Cart</button>
     `;
@@ -206,13 +244,16 @@ function renderCart() {
   let total = 0;
 
   cart.forEach((item, index) => {
-    const subtotal = item.price * item.qty;
+    // If product is discounted, apply discount automatically
+    const price = item.discountRate ? item.price * (1 - item.discountRate) : item.price;
+    const subtotal = price * item.qty;
     total += subtotal;
+
     const row = document.createElement("tr");
     row.innerHTML = `
       <td><img src="${item.image}" alt="${item.name}"></td>
       <td>${item.name}</td>
-      <td>$${item.price.toFixed(2)}</td>
+      <td>$${price.toFixed(2)}</td>
       <td>
         <button onclick="changeQty(${index}, -1)">−</button>
         ${item.qty}
@@ -248,6 +289,7 @@ document.getElementById("checkout-btn").addEventListener("click", () => {
   }
 });
 
+// Start app
 renderProducts();
 </script>
 </body>
